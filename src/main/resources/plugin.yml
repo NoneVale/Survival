@@ -1,0 +1,7 @@
+name: Survival
+version: ${version}
+main: net.nighthawkempires.survival.SurvivalPlugin
+description: Nighthawk Empires' Survival Plugin.
+author: NoneVale_
+api-version: 1.15
+depend: [Core]
