@@ -4,7 +4,7 @@ import com.google.common.collect.Lists;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
-import net.minecraft.server.v1_16_R2.NBTTagCompound;
+import net.minecraft.nbt.NBTTagCompound;
 import net.nighthawkempires.core.CorePlugin;
 import net.nighthawkempires.core.util.ItemUtil;
 import net.nighthawkempires.survival.SurvivalPlugin;
@@ -15,7 +15,7 @@ import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.CreatureSpawner;
-import org.bukkit.craftbukkit.v1_16_R2.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_17_R1.inventory.CraftItemStack;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -233,7 +233,7 @@ public class PlayerListener implements Listener {
     }
 
     private String getItemStackInfo(ItemStack itemStack) {
-        net.minecraft.server.v1_16_R2.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
+        net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
         NBTTagCompound compound = new NBTTagCompound();
         compound = nmsItemStack.save(compound);
 

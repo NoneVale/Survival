@@ -3,5 +3,5 @@ version: ${version}
 main: net.nighthawkempires.survival.SurvivalPlugin
 description: Nighthawk Empires' Survival Plugin.
 author: NoneVale_
-api-version: 1.15
+api-version: 1.17
 depend: [Core]
