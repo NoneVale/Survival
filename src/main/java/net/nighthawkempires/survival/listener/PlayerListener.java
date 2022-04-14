@@ -1,6 +1,7 @@
 package net.nighthawkempires.survival.listener;
 
 import com.google.common.collect.Lists;
+import io.papermc.paper.event.player.PlayerLecternPageChangeEvent;
 import net.md_5.bungee.api.chat.BaseComponent;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
@@ -9,26 +10,22 @@ import net.nighthawkempires.core.CorePlugin;
 import net.nighthawkempires.core.util.ItemUtil;
 import net.nighthawkempires.survival.SurvivalPlugin;
 import net.nighthawkempires.survival.user.UserModel;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.GameMode;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.CreatureSpawner;
-import org.bukkit.craftbukkit.v1_17_R1.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_18_R1.inventory.CraftItemStack;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.ExplosionPrimeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
@@ -63,35 +60,36 @@ public class PlayerListener implements Listener {
 
                 Random random = new Random();
                 if (random.nextInt(100) + 1 <= beheadChance) {
+                    String message = CorePlugin.getMessages().getChatMessage(GREEN + player.getName() + GRAY
+                            + " has been been decapitated by " + GREEN + killer.getName());
+                    TextComponent component = new TextComponent(message);
+
                     if (itemStack.getItemMeta().hasDisplayName()) {
                         String item = getItemStackInfo(itemStack);
 
-                        String message = CorePlugin.getMessages().getChatMessage(GREEN + player.getName() + GRAY
+                        message = CorePlugin.getMessages().getChatMessage(GREEN + player.getName() + GRAY
                                 + " has been been decapitated by " + GREEN + killer.getName() + GRAY + " using ");
-                        TextComponent component = new TextComponent(message);
+
+                        component = new TextComponent(message);
                         BaseComponent[] itemComponent = new BaseComponent[] {
                                 new TextComponent(item)
                         };
                         TextComponent itemName = new TextComponent(itemStack.getItemMeta().getDisplayName());
                         itemName.setHoverEvent(new HoverEvent(HoverEvent.Action.SHOW_ITEM, itemComponent));
                         component.addExtra(itemName);
-                        component.addExtra(".");
-                        for (Player online : Bukkit.getOnlinePlayers()) {
-                            online.spigot().sendMessage(component);
-                        }
-                        player.getWorld().dropItemNaturally(player.getLocation(), ItemUtil.getPlayerHead(
-                                ChatColor.GREEN + player.getName() + "'s " + ChatColor.GRAY + "Skull", player.getName()));
-                    } else {
-                        String message = CorePlugin.getMessages().getChatMessage(GREEN + player.getName() + GRAY
-                                + " has been been decapitated by " + GREEN + killer.getName());
-                        TextComponent component = new TextComponent(message);
-                        component.addExtra(".");
-                        for (Player online : Bukkit.getOnlinePlayers()) {
-                            online.spigot().sendMessage(component);
-                        }
-                        player.getWorld().dropItemNaturally(player.getLocation(), ItemUtil.getPlayerHead(
-                                ChatColor.GREEN + player.getName() + "'s " + ChatColor.GRAY + "Skull", player.getName()));
                     }
+
+                    component.addExtra(".");
+                    for (Player online : Bukkit.getOnlinePlayers()) {
+                        online.spigot().sendMessage(component);
+                    }
+
+                    ItemStack head = ItemUtil.getPlayerHead(player.getUniqueId());
+                    ItemMeta headMeta = head.getItemMeta();
+                    headMeta.setDisplayName(ChatColor.GREEN + player.getName() + "'s " + ChatColor.GRAY + "Skull");
+                    head.setItemMeta(headMeta);
+
+                    player.getWorld().dropItemNaturally(player.getLocation(), head);
                 }
             }
 
@@ -235,8 +233,20 @@ public class PlayerListener implements Listener {
     private String getItemStackInfo(ItemStack itemStack) {
         net.minecraft.world.item.ItemStack nmsItemStack = CraftItemStack.asNMSCopy(itemStack);
         NBTTagCompound compound = new NBTTagCompound();
-        compound = nmsItemStack.save(compound);
 
-        return compound.toString();
+        return nmsItemStack.b(compound).toString();
+    }
+
+    @EventHandler
+    public void onExplode(PlayerInteractEvent event) {
+        if (event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+            Block block = event.getClickedBlock();
+            if (block.getType() == Material.GREEN_BED) {
+                if (block.getLocation().getWorld().getEnvironment() == World.Environment.NETHER) {
+                    event.setCancelled(true);
+                    block.getWorld().createExplosion(block.getLocation(), 15f, true, true);
+                }
+            }
+        }
     }
 }
